@@ -39,7 +39,7 @@
     opacity:0; transition:opacity 0.6s ease;
   }
   #step-indicator.visible { opacity:1; }
-  .step-dot { width:6px; height:6px; border-radius:50%; background:rgba(26,25,22,0.2); transition:all 0.4s ease; }
+  .step-dot { width:6px; height:6px; border-radius:50%; background:rgba(26,25,22,0.2); transition:all 0.4s ease; cursor:pointer; }
   .step-dot.active { background:var(--ink); transform:scale(1.4); }
 
   /* CAPTION */
@@ -52,9 +52,13 @@
   .caption-label { font-size:11px; font-weight:500; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-muted); margin-bottom:4px; }
   .caption-title { font-family:'DM Serif Display',serif; font-size:20px; line-height:1.2; }
 
-  /* NAV BUTTON */
-  #nav-next {
+  /* ── NAVIGATION CONTAINER & BUTTONS ── */
+  #nav-container {
     position:fixed; right:36px; bottom:36px; z-index:100;
+    display:flex; align-items:center; gap:12px;
+  }
+
+  .nav-btn {
     display:flex; align-items:center; gap:10px;
     background:var(--white); border:1px solid var(--border); border-radius:40px;
     padding:14px 24px; cursor:pointer;
@@ -63,10 +67,13 @@
     opacity:0; pointer-events:none;
     transition:opacity 0.5s ease, background 0.3s ease, color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
   }
-  #nav-next.visible { opacity:1; pointer-events:all; }
-  #nav-next:hover { background:var(--ink); color:var(--white); border-color:var(--ink); box-shadow:0 8px 32px rgba(26,25,22,0.18); transform:translateY(-1px); }
-  #nav-next:hover .arr { transform:translateX(3px); }
-  .arr { transition:transform 0.3s ease; display:flex; align-items:center; }
+  .nav-btn.visible { opacity:1; pointer-events:all; }
+  .nav-btn:hover { background:var(--ink); color:var(--white); border-color:var(--ink); box-shadow:0 8px 32px rgba(26,25,22,0.18); transform:translateY(-1px); }
+  
+  #nav-next:hover .arr-next { transform:translateX(3px); }
+  #nav-prev:hover .arr-prev { transform:translateX(-3px); }
+  
+  .arr-next, .arr-prev { transition:transform 0.3s ease; display:flex; align-items:center; }
 
   /* ── CARD LAYER (générique, réutilisé pour cartos, diags et restits) ── */
   .card-layer {
@@ -93,12 +100,13 @@
   }
   .card-layer.visible .layer-title { opacity:1; transform:translateY(0); }
 
-  /* Cartes (Taille augmentée de x1.5 : 260px * 1.5 = 390px) */
+  /* Cartes (Taille augmentée de x2 par rapport à 390px = 780px) */
   .c-card {
     position:absolute;
-    width:390px;
+    width:780px;
+    max-width:90vw;
     background:var(--white);
-    border-radius:14px;
+    border-radius:16px;
     overflow:hidden;
     box-shadow:var(--shadow);
     opacity:0;
@@ -108,6 +116,11 @@
   }
   .c-card.shown { opacity:1; transform:translateY(0) scale(1); pointer-events:all; }
 
+  /* Gestion des priorités d'affichage des fiches actives */
+  #cc1, #dc1, #rc1 { z-index: 10; }
+  #cc2, #dc2, #rc2 { z-index: 20; }
+  #cc3, #dc3, #rc3 { z-index: 30; }
+
   /* Carte du centre : translateX(-50%) toujours présent */
   .c-card.center-card {
     transform:translateX(-50%) translateY(18px) scale(0.96);
@@ -116,14 +129,14 @@
     transform:translateX(-50%) translateY(0) scale(1);
   }
 
-  .c-img { width:100%; aspect-ratio:3/2; background:var(--accent-light); overflow:hidden; }
+  .c-img { width:100%; aspect-ratio:16/9; background:var(--accent-light); overflow:hidden; }
   .c-img img { width:100%; height:100%; object-fit:cover; display:block; }
   .c-ph { width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; color:var(--ink-muted); }
   .c-ph svg { opacity:0.3; }
-  .c-ph span { font-size:11px; letter-spacing:0.08em; font-weight:500; text-transform:uppercase; text-align:center; padding:0 10px; }
-  .c-foot { padding:16px 20px 18px; border-top:1px solid var(--border); }
-  .c-idx { font-size:10px; font-weight:500; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-muted); margin-bottom:5px; }
-  .c-ttl { font-family:'DM Serif Display',serif; font-size:16px; }
+  .c-ph span { font-size:12px; letter-spacing:0.08em; font-weight:500; text-transform:uppercase; text-align:center; padding:0 20px; }
+  .c-foot { padding:20px 24px 22px; border-top:1px solid var(--border); }
+  .c-idx { font-size:11px; font-weight:500; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-muted); margin-bottom:6px; }
+  .c-ttl { font-family:'DM Serif Display',serif; font-size:22px; }
 
   /* Bouton action dans le layer */
   .layer-btn {
@@ -137,6 +150,7 @@
     opacity:0; transform:translateY(10px); pointer-events:none;
     transition:opacity 0.4s ease, transform 0.4s ease, background 0.3s ease;
     white-space:nowrap;
+    z-index: 200;
   }
   .layer-btn.shown { opacity:1; transform:translateY(0); pointer-events:all; }
   .layer-btn:hover { background:var(--accent); transform:translateY(-1px); }
@@ -164,14 +178,25 @@
   <div class="caption-title" id="caption-title">Port Town</div>
 </div>
 
-<button id="nav-next">
-  <span id="nav-label">Cartographies</span>
-  <span class="arr">
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-      <path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-  </span>
-</button>
+<div id="nav-container">
+  <button id="nav-prev" class="nav-btn">
+    <span class="arr-prev">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <path d="M11 7H3M6.5 10.5L3 7l3.5-3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </span>
+    <span id="nav-prev-label">Retour</span>
+  </button>
+
+  <button id="nav-next" class="nav-btn">
+    <span id="nav-label">Cartographies</span>
+    <span class="arr-next">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </span>
+  </button>
+</div>
 
 <!-- LAYER 1 : CARTOS -->
 <div class="card-layer" id="layer-carto">
@@ -181,7 +206,7 @@
     <div class="c-img" id="ci1"></div>
     <div class="c-foot"><div class="c-idx">01 — Cartographie</div><div class="c-ttl">Analyse territoriale</div></div>
   </div>
-  <div class="c-card center-card" id="cc2" style="top:30vh; left:50%;">
+  <div class="c-card center-card" id="cc2" style="top:22vh; left:50%;">
     <div class="c-img" id="ci2"></div>
     <div class="c-foot"><div class="c-idx">02 — Cartographie</div><div class="c-ttl">Trame viaire</div></div>
   </div>
@@ -206,7 +231,7 @@
     <div class="c-img" id="di1"></div>
     <div class="c-foot"><div class="c-idx">01 — Diagnostic</div><div class="c-ttl">Analyse initiale</div></div>
   </div>
-  <div class="c-card center-card" id="dc2" style="top:30vh; left:50%;">
+  <div class="c-card center-card" id="dc2" style="top:22vh; left:50%;">
     <div class="c-img" id="di2"></div>
     <div class="c-foot"><div class="c-idx">02 — Diagnostic</div><div class="c-ttl">Enjeux identifiés</div></div>
   </div>
@@ -231,7 +256,7 @@
     <div class="c-img" id="ri1"></div>
     <div class="c-foot"><div class="c-idx">01 — Restitution</div><div class="c-ttl">Démarche participative</div></div>
   </div>
-  <div class="c-card center-card" id="rc2" style="top:30vh; left:50%;">
+  <div class="c-card center-card" id="rc2" style="top:22vh; left:50%;">
     <div class="c-img" id="ri2"></div>
     <div class="c-foot"><div class="c-idx">02 — Restitution</div><div class="c-ttl">Présentation des scénarios</div></div>
   </div>
@@ -258,14 +283,31 @@ const CAM_FOCUS = { eye:[-0.90,0.85,1.98],  target:[-0.14,0.03,1.30] };
 const CAM_FINAL = { eye:[-0.32,-0.24,1.16], target:[-0.18,-0.24,1.18] };
 
 // ─────────────────────────────────────────────
-//  PHASES : init → cartos → cam1 → diags → cam2 → restits → done
+//  MACHINE À ÉTATS UNIFIÉE (0 à 12)
 // ─────────────────────────────────────────────
-let phase  = 'init';
-let busy   = false;
-let api    = null;
+let currentStep = 0;
+let busy        = false;
+let api         = null;
+
+// Cartographie de l'information des captions par étape
+const STEP_INFO = {
+  0: { label: "Vue d'ensemble", title: "Port Town" },
+  1: { label: "Vue d'ensemble", title: "Port Town" },
+  2: { label: "Vue d'ensemble", title: "Port Town" },
+  3: { label: "Vue d'ensemble", title: "Port Town" },
+  4: { label: "Focus", title: "Zoom quartier" },
+  5: { label: "Focus", title: "Zoom quartier" },
+  6: { label: "Focus", title: "Zoom quartier" },
+  7: { label: "Focus", title: "Zoom quartier" },
+  8: { label: "Restitution", title: "restituer un diagnostic territorial en public" },
+  9: { label: "Restitution", title: "restituer un diagnostic territorial en public" },
+  10: { label: "Restitution", title: "restituer un diagnostic territorial en public" },
+  11: { label: "Restitution", title: "restituer un diagnostic territorial en public" },
+  12: { label: "Vue finale", title: "Port Town — Restitutions complétées" }
+};
 
 // ─────────────────────────────────────────────
-//  DOTS  (0=init, 1-3=cartos, 4=cam1, 5-7=diags, 8=cam2, 9-11=restits, 12=done)
+//  DOTS MANAGEMENT
 // ─────────────────────────────────────────────
 const DOT_COUNT = 13;
 const $dots = document.getElementById('step-indicator');
@@ -274,6 +316,9 @@ function buildDots() {
   for (let i=0; i<DOT_COUNT; i++) {
     const d=document.createElement('div');
     d.className='step-dot'+(i===0?' active':'');
+    d.addEventListener('click', () => {
+      goToStep(i);
+    });
     $dots.appendChild(d);
   }
 }
@@ -289,11 +334,12 @@ const $bar      = document.getElementById('loading-bar');
 const $cap      = document.getElementById('caption');
 const $capLbl   = document.getElementById('caption-label');
 const $capTtl   = document.getElementById('caption-title');
-const $nav      = document.getElementById('nav-next');
+const $navNext  = document.getElementById('nav-next');
+const $navPrev  = document.getElementById('nav-prev');
 const $navLbl   = document.getElementById('nav-label');
 
 // ─────────────────────────────────────────────
-//  CAMÉRA — verrou boucle au chargement
+//  CAMÉRA UTILITIES
 // ─────────────────────────────────────────────
 let lockTimer = null;
 function lockCamera(cam, onStable) {
@@ -325,49 +371,26 @@ function initViewer() {
       api.addEventListener('viewerready', ()=>{
         try { api.hideAnnotationTooltips(()=>{}); } catch(e){}
         try { api.setAnnotationsVisible(false, ()=>{}); } catch(e){}
-        // Barre fictive
+        
         let p=0; const t=setInterval(()=>{ p+=5; $bar.style.width=Math.min(p,88)+'%'; if(p>=88) clearInterval(t); },80);
-        // Verrouiller caméra initiale puis afficher UI
+        
         lockCamera(CAM_INIT, ()=>{
           $bar.style.width='100%';
           setTimeout(()=>{
             $loading.classList.add('hidden');
             buildDots(); $dots.classList.add('visible');
             $cap.classList.add('visible');
-            $nav.classList.add('visible');
-            updateNav();
+            updateNavigationButtons(0);
           },350);
         });
       });
     },
-    error: ()=>{ setTimeout(()=>{ $bar.style.width='100%'; setTimeout(()=>{ $loading.classList.add('hidden'); buildDots(); $dots.classList.add('visible'); $cap.classList.add('visible'); $nav.classList.add('visible'); updateNav(); },350); },2000); }
+    error: ()=>{ setTimeout(()=>{ $bar.style.width='100%'; setTimeout(()=>{ $loading.classList.add('hidden'); buildDots(); $dots.classList.add('visible'); $cap.classList.add('visible'); updateNavigationButtons(0); },350); },2000); }
   });
 }
 
 // ─────────────────────────────────────────────
-//  NAV BUTTON
-// ─────────────────────────────────────────────
-function updateNav() {
-  const labels = { init:'Cartographies', cam1:'Diagnostic', cam2:'Restitution', done:'' };
-  const label = labels[phase] || '';
-  if (!label || phase==='done') {
-    $nav.style.opacity='0'; $nav.style.pointerEvents='none';
-  } else {
-    $nav.style.opacity='1'; $nav.style.pointerEvents='all';
-    $navLbl.textContent = label;
-  }
-}
-
-$nav.addEventListener('click', ()=>{
-  if (busy) return;
-  if (phase==='init')  { startLayer('carto'); return; }
-  if (phase==='cam1')  { startLayer('diag');  return; }
-  if (phase==='cam2')  { startLayer('restit'); return; }
-});
-
-// ─────────────────────────────────────────────
-//  LAYER GÉNÉRIQUE
-//  layerId : 'carto' | 'diag' | 'restit'
+//  LAYER CONFIGURATIONS
 // ─────────────────────────────────────────────
 const LAYER_CONFIG = {
   carto: {
@@ -377,9 +400,7 @@ const LAYER_CONFIG = {
       { card:'cc1', img:'ci1', file:'carto1.jpg' },
       { card:'cc2', img:'ci2', file:'carto2.jpg' },
       { card:'cc3', img:'ci3', file:'carto3.jpg' }
-    ],
-    dotStart: 1,
-    onDone: closeCartosThenCam1
+    ]
   },
   diag: {
     layerEl: 'layer-diag',
@@ -388,9 +409,7 @@ const LAYER_CONFIG = {
       { card:'dc1', img:'di1', file:'diag1.jpg' },
       { card:'dc2', img:'di2', file:'diag2.jpg' },
       { card:'dc3', img:'di3', file:'diag3.jpg' }
-    ],
-    dotStart: 5,
-    onDone: closeDiagsThenCam2
+    ]
   },
   restit: {
     layerEl: 'layer-restit',
@@ -399,18 +418,13 @@ const LAYER_CONFIG = {
       { card:'rc1', img:'ri1', file:'restitution1.jpg' },
       { card:'rc2', img:'ri2', file:'restitution2.jpg' },
       { card:'rc3', img:'ri3', file:'restitution3.jpg' }
-    ],
-    dotStart: 9,
-    onDone: closeRestitsThenDone
+    ]
   }
 };
 
-// état courant du layer actif
-let activeLayer = null;
-let shownCount  = 0;
-
 function loadImg(wrapId, file) {
   const w = document.getElementById(wrapId);
+  if (w.children.length > 0) return; // Déjà chargé
   w.innerHTML='';
   const img=new Image();
   img.onload=()=>{ img.style.cssText='width:100%;height:100%;object-fit:cover;display:block;'; w.appendChild(img); };
@@ -418,150 +432,192 @@ function loadImg(wrapId, file) {
   img.src=file;
 }
 
-function startLayer(id) {
-  const cfg = LAYER_CONFIG[id];
-  activeLayer = cfg;
-  shownCount = 0;
+// Mappage de la caméra par étape
+function getCameraForStep(step) {
+  if (step >= 0 && step <= 3) return CAM_INIT;
+  if (step >= 4 && step <= 7) return CAM_FOCUS;
+  return CAM_FINAL;
+}
+
+// Mappage des calques par étape
+function getLayerForStep(step) {
+  if (step >= 1 && step <= 3) return 'carto';
+  if (step >= 5 && step <= 7) return 'diag';
+  if (step >= 9 && step <= 11) return 'restit';
+  return null;
+}
+
+// Nombre de cartes à afficher par étape
+function getCardsShownCountForStep(step) {
+  if (step === 1 || step === 5 || step === 9) return 1;
+  if (step === 2 || step === 6 || step === 10) return 2;
+  if (step === 3 || step === 7 || step === 11) return 3;
+  return 0;
+}
+
+// ─────────────────────────────────────────────
+//  TRANSITION ENGINE (MAIN ROUTER)
+// ─────────────────────────────────────────────
+async function goToStep(targetStep) {
+  if (busy || targetStep === currentStep || targetStep < 0 || targetStep >= DOT_COUNT) return;
+  busy = true;
+
+  const prevStep = currentStep;
+  currentStep = targetStep;
+
+  // 1. Mise à jour de l'indicateur Dots
+  setDot(targetStep);
+
+  // 2. Détermination de la caméra et déclenchement si mouvement requis
+  const prevCam = getCameraForStep(prevStep);
+  const nextCam = getCameraForStep(targetStep);
+  const camChanged = (prevCam.eye.join(',') !== nextCam.eye.join(','));
+
+  // 3. Mise à jour des légendes textuelles
+  const info = STEP_INFO[targetStep];
+  $capLbl.textContent = info.label;
+  $capTtl.textContent = info.title;
+
+  // 4. Gestion des calques de cartes
+  const prevLayer = getLayerForStep(prevStep);
+  const nextLayer = getLayerForStep(targetStep);
+
+  // Helper pour appliquer la visibilité exacte des cartes
+  function updateCardsVisibility(layerId, count) {
+    const cfg = LAYER_CONFIG[layerId];
+    if (!cfg) return;
+    cfg.cards.forEach((c, index) => {
+      const cardEl = document.getElementById(c.card);
+      if (index < count) {
+        cardEl.classList.add('shown');
+      } else {
+        cardEl.classList.remove('shown');
+      }
+    });
+
+    const $btn = document.getElementById(cfg.btnEl);
+    if (count > 0) {
+      $btn.classList.add('shown');
+    } else {
+      $btn.classList.remove('shown');
+    }
+    updateLayerBtn(cfg, count);
+  }
+
+  function updateLayerBtn(cfg, shown) {
+    const $btn = document.getElementById(cfg.btnEl);
+    const svg = `<svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    if (shown < cfg.cards.length) {
+      $btn.innerHTML = `Carte suivante ${svg}`;
+    } else {
+      $btn.innerHTML = `Continuer ${svg}`;
+    }
+  }
+
+  // Si on quitte un calque, on replie les fiches avec un effet staggered
+  if (prevLayer && prevLayer !== nextLayer) {
+    const prevCfg = LAYER_CONFIG[prevLayer];
+    document.getElementById(prevCfg.btnEl).classList.remove('shown');
+    prevCfg.cards.slice().reverse().forEach((c, i) => {
+      setTimeout(() => document.getElementById(c.card).classList.remove('shown'), i * 60);
+    });
+    await delay(250);
+    document.getElementById(prevCfg.layerEl).classList.remove('visible');
+    await delay(150);
+  }
+
+  // Si on rentre ou navigue dans un calque
+  if (nextLayer) {
+    const nextCfg = LAYER_CONFIG[nextLayer];
+    const layerEl = document.getElementById(nextCfg.layerEl);
+    if (!layerEl.classList.contains('visible')) {
+      // Précharger les images à l'ouverture du calque
+      nextCfg.cards.forEach(c => loadImg(c.img, c.file));
+      layerEl.classList.add('visible');
+      await delay(150);
+    }
+    const nextCount = getCardsShownCountForStep(targetStep);
+    updateCardsVisibility(nextLayer, nextCount);
+  }
+
+  // 5. Transition de caméra Sketchfab
+  if (camChanged) {
+    await new Promise(resolve => {
+      moveCamera(nextCam, 2.0, resolve);
+    });
+  }
+
+  // 6. Recalcul de l'affichage des boutons généraux
+  updateNavigationButtons(targetStep);
+
   busy = false;
-
-  // Précharger
-  cfg.cards.forEach(c=>loadImg(c.img, c.file));
-  // Reset
-  cfg.cards.forEach(c=>document.getElementById(c.card).classList.remove('shown'));
-  const $btn = document.getElementById(cfg.btnEl);
-  $btn.classList.remove('shown');
-  updateLayerBtn(cfg, 0);
-
-  // Cacher nav-next
-  $nav.style.opacity='0'; $nav.style.pointerEvents='none';
-
-  // Afficher layer
-  document.getElementById(cfg.layerEl).classList.add('visible');
-
-  // 1ère carte
-  setTimeout(()=>showCard(cfg), 200);
 }
 
-function updateLayerBtn(cfg, shown) {
-  const $btn = document.getElementById(cfg.btnEl);
-  const svg = `<svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-  if (shown < cfg.cards.length) {
-    $btn.innerHTML = `Image suivante ${svg}`;
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// ─────────────────────────────────────────────
+//  BUTTON STATE UPDATES
+// ─────────────────────────────────────────────
+function updateNavigationButtons(step) {
+  // Bouton Retour : visible à partir de l'étape 1
+  if (step > 0) {
+    $navPrev.classList.add('visible');
   } else {
-    $btn.innerHTML = `Continuer ${svg}`;
+    $navPrev.classList.remove('visible');
   }
-}
 
-function showCard(cfg) {
-  if (busy || shownCount >= cfg.cards.length) return;
-  busy = true;
-  const c = cfg.cards[shownCount];
-  document.getElementById(c.card).classList.add('shown');
-  shownCount++;
-  setDot(cfg.dotStart + shownCount - 1);
-  updateLayerBtn(cfg, shownCount);
-
-  setTimeout(()=>{
-    busy = false;
-    document.getElementById(cfg.btnEl).classList.add('shown');
-  }, 500);
-}
-
-// Attacher les listeners des boutons layer
-document.getElementById('carto-btn').addEventListener('click', onLayerBtnClick);
-document.getElementById('diag-btn').addEventListener('click', onLayerBtnClick);
-document.getElementById('restit-btn').addEventListener('click', onLayerBtnClick);
-
-function onLayerBtnClick() {
-  if (busy || !activeLayer) return;
-  if (shownCount < activeLayer.cards.length) {
-    // Cacher bouton, montrer carte suivante
-    document.getElementById(activeLayer.btnEl).classList.remove('shown');
-    setTimeout(()=>showCard(activeLayer), 150);
+  // Bouton Suivant : visible sur les étapes hors-calque (excluant la fin)
+  const layer = getLayerForStep(step);
+  if (!layer && step < 12) {
+    $navNext.classList.add('visible');
+    const labels = { 0: 'Cartographies', 4: 'Diagnostic', 8: 'Restitution' };
+    $navLbl.textContent = labels[step] || '';
   } else {
-    // Toutes montrées → exécuter onDone
-    activeLayer.onDone();
+    $navNext.classList.remove('visible');
   }
 }
 
 // ─────────────────────────────────────────────
-//  FERMER LAYER + MOUVEMENT CAMÉRA
+//  DIRECTIONS HANDLERS
 // ─────────────────────────────────────────────
-function closeLayer(cfg, cb) {
-  busy = true;
-  document.getElementById(cfg.btnEl).classList.remove('shown');
-  cfg.cards.slice().reverse().forEach((c,i)=>{
-    setTimeout(()=>document.getElementById(c.card).classList.remove('shown'), i*80);
-  });
-  setTimeout(()=>{
-    document.getElementById(cfg.layerEl).classList.remove('visible');
-    setTimeout(cb, 200);
-  }, 400);
+function stepForward() {
+  if (busy) return;
+  if (currentStep < 12) {
+    goToStep(currentStep + 1);
+  }
 }
 
-function closeCartosThenCam1() {
-  closeLayer(LAYER_CONFIG.carto, ()=>{
-    moveCamera(CAM_FOCUS, 2.5, ()=>{
-      $capLbl.textContent='Focus';
-      $capTtl.textContent='Zoom quartier';
-      setDot(4);
-      phase='cam1';
-      busy=false;
-      activeLayer=null;
-      updateNav();
-    });
-  });
-}
-
-function closeDiagsThenCam2() {
-  closeLayer(LAYER_CONFIG.diag, ()=>{
-    moveCamera(CAM_FINAL, 2.5, ()=>{
-      $capLbl.textContent='Restitution';
-      $capTtl.textContent='restituer un diagnostic territorial en public';
-      setDot(8);
-      phase='cam2';
-      busy=false;
-      activeLayer=null;
-      updateNav();
-    });
-  });
-}
-
-function closeRestitsThenDone() {
-  closeLayer(LAYER_CONFIG.restit, ()=>{
-    $capLbl.textContent='Vue finale';
-    $capTtl.textContent='Port Town — Restitutions complétées';
-    setDot(12);
-    phase='done';
-    busy=false;
-    activeLayer=null;
-    updateNav();
-  });
+function stepBackward() {
+  if (busy) return;
+  if (currentStep > 0) {
+    goToStep(currentStep - 1);
+  }
 }
 
 // ─────────────────────────────────────────────
-//  KEYBOARD
+//  CLICK LISTENERS
+// ─────────────────────────────────────────────
+$navNext.addEventListener('click', stepForward);
+$navPrev.addEventListener('click', stepBackward);
+
+// Les boutons d'action des calques font simplement avancer d'une étape
+document.getElementById('carto-btn').addEventListener('click', stepForward);
+document.getElementById('diag-btn').addEventListener('click', stepForward);
+document.getElementById('restit-btn').addEventListener('click', stepForward);
+
+// ─────────────────────────────────────────────
+//  KEYBOARD CONTROL
 // ─────────────────────────────────────────────
 document.addEventListener('keydown', e=>{
-  if (e.key!=='ArrowRight'&&e.key!==' ') return;
-  e.preventDefault();
-  if (busy) return;
-
-  // Priorité absolue au layer actif (Cartes) si un layer est ouvert
-  if (activeLayer) {
-    if (shownCount < activeLayer.cards.length) {
-      document.getElementById(activeLayer.btnEl).classList.remove('shown');
-      setTimeout(()=>showCard(activeLayer), 150);
-    } else {
-      activeLayer.onDone();
-    }
-    return;
+  if (e.key==='ArrowRight' || e.key===' ') {
+    e.preventDefault();
+    stepForward();
+  } else if (e.key==='ArrowLeft' || e.key==='Backspace') {
+    e.preventDefault();
+    stepBackward();
   }
-
-  // Sinon, transition de phase linéaire classique
-  if (phase==='init') { startLayer('carto'); return; }
-  if (phase==='cam1') { startLayer('diag');  return; }
-  if (phase==='cam2') { startLayer('restit'); return; }
 });
 
 // ─────────────────────────────────────────────

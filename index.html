@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Port Town — Présentation</title>
+<title>Trajectoire Portfolio — Présentation</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
   :root {
@@ -16,11 +16,10 @@
   }
   html,body { width:100%; height:100%; overflow:hidden; background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--ink); }
 
-  /* VIEWER */
+  /* VIEWER 3D */
   #viewer-wrap { position:fixed; inset:0; z-index:0; }
   #viewer-wrap iframe { width:100%; height:100%; border:none; display:block; }
 
-  /* LOADING */
   #loading {
     position:fixed; inset:0; z-index:300;
     background:var(--bg);
@@ -28,11 +27,11 @@
     transition:opacity 0.9s ease, visibility 0.9s ease;
   }
   #loading.hidden { opacity:0; visibility:hidden; pointer-events:none; }
-  .loading-label { font-family:'DM Serif Display',serif; font-size:22px; letter-spacing:0.02em; }
+  .loading-label { font-family:'DM Serif Display',serif; font-size:26px; letter-spacing:0.02em; }
   .loading-bar-wrap { width:160px; height:2px; background:var(--border); border-radius:2px; overflow:hidden; }
   .loading-bar { height:100%; background:var(--accent); width:0%; transition:width 0.25s ease; }
 
-  /* DOTS */
+  /* DOTS INDICATEURS D'ÉTAPES */
   #step-indicator {
     position:fixed; top:28px; left:50%; transform:translateX(-50%);
     z-index:100; display:flex; align-items:center; gap:8px;
@@ -42,7 +41,6 @@
   .step-dot { width:6px; height:6px; border-radius:50%; background:rgba(26,25,22,0.2); transition:all 0.4s ease; cursor:pointer; }
   .step-dot.active { background:var(--ink); transform:scale(1.4); }
 
-  /* CAPTION */
   #caption {
     position:fixed; left:36px; bottom:36px; z-index:100;
     opacity:0; transform:translateY(8px);
@@ -100,7 +98,7 @@
   }
   .card-layer.visible .layer-title { opacity:1; transform:translateY(0); }
 
-  /* Cartes épurées (Largeur 780px, pas de bandeaux blancs, juste l'image) */
+  /* Cartes épurées (Largeur augmentée d'un facteur 2: 780px) */
   .c-card {
     position:absolute;
     width:780px;
@@ -117,7 +115,7 @@
   }
   .c-card.shown { opacity:1; transform:translateY(0) scale(1); pointer-events:all; }
 
-  /* Gestion des priorités d'affichage des fiches actives */
+  /* Gestion de la profondeur d'affichage */
   #cc1, #dc1, #rc1, #pc1, #dac1 { z-index: 10; }
   #cc2, #dc2, #rc2, #pc2, #dac2 { z-index: 20; }
   #cc3, #dc3, #rc3, #pc3, #dac3 { z-index: 30; }
@@ -130,14 +128,54 @@
     transform:translateX(-50%) translateY(0) scale(1);
   }
 
-  /* Image occupant tout l'espace de la carte sans bande de texte */
   .c-img { width:100%; aspect-ratio:16/9; background:var(--accent-light); overflow:hidden; }
   .c-img img { width:100%; height:100%; object-fit:cover; display:block; }
   .c-ph { width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; color:var(--ink-muted); }
   .c-ph svg { opacity:0.3; }
   .c-ph span { font-size:12px; letter-spacing:0.08em; font-weight:500; text-transform:uppercase; text-align:center; padding:0 20px; }
 
-  /* Bouton action dans le layer */
+  /* Pied de page de la carte : Bannière d'information */
+  .c-foot {
+    padding:16px 24px;
+    background:var(--white);
+    border-top:1px solid var(--border);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:16px;
+  }
+  .c-desc {
+    font-size:14px;
+    line-height:1.5;
+    font-weight:400;
+    color:var(--ink);
+    flex:1;
+    min-width:280px;
+  }
+  .c-pills {
+    display:flex;
+    align-items:center;
+    gap:6px;
+    flex-wrap:wrap;
+  }
+  .pill {
+    font-size:9.5px;
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    padding:5px 11px;
+    border-radius:30px;
+    display:inline-block;
+    white-space:nowrap;
+  }
+  .pill-b1 { background: #dc2626; color: #ffffff; }
+  .pill-b2 { background: #ea580c; color: #ffffff; }
+  .pill-b3 { background: #eab308; color: #1a1916; }
+  .pill-b4 { background: #16a34a; color: #ffffff; }
+  .pill-b5 { background: #1d4ed8; color: #ffffff; }
+
+  /* Bouton d'action au sein du calque */
   .layer-btn {
     position:absolute; right:36px; bottom:36px;
     display:flex; align-items:center; gap:10px;
@@ -158,7 +196,7 @@
 <body>
 
 <div id="loading">
-  <div class="loading-label">Port Town</div>
+  <div class="loading-label">Trajectoire Portfolio</div>
   <div class="loading-bar-wrap"><div class="loading-bar" id="loading-bar"></div></div>
 </div>
 
@@ -203,12 +241,33 @@
 
   <div class="c-card" id="cc1" style="top:8vh; right:4vw;">
     <div class="c-img" id="ci1"></div>
+    <div class="c-foot">
+      <div class="c-desc">première ébauche de cartographie</div>
+      <div class="c-pills">
+        <span class="pill pill-b3">Bloc 3</span>
+        <span class="pill pill-b4">Bloc 4</span>
+      </div>
+    </div>
   </div>
   <div class="c-card center-card" id="cc2" style="top:22vh; left:50%;">
     <div class="c-img" id="ci2"></div>
+    <div class="c-foot">
+      <div class="c-desc">manipulation de données non géocoder</div>
+      <div class="c-pills">
+        <span class="pill pill-b3">Bloc 3</span>
+        <span class="pill pill-b4">Bloc 4</span>
+      </div>
+    </div>
   </div>
   <div class="c-card" id="cc3" style="bottom:8vh; left:6vw;">
     <div class="c-img" id="ci3"></div>
+    <div class="c-foot">
+      <div class="c-desc">utilisation de rendu web pour faciliter la consultation</div>
+      <div class="c-pills">
+        <span class="pill pill-b3">Bloc 3</span>
+        <span class="pill pill-b4">Bloc 4</span>
+      </div>
+    </div>
   </div>
 
   <button class="layer-btn" id="carto-btn">
@@ -225,12 +284,36 @@
 
   <div class="c-card" id="dc1" style="top:8vh; right:4vw;">
     <div class="c-img" id="di1"></div>
+    <div class="c-foot">
+      <div class="c-desc">compréhension du fonctionnement des territoires et d'alternatives innovantes</div>
+      <div class="c-pills">
+        <span class="pill pill-b1">Bloc 1</span>
+        <span class="pill pill-b3">Bloc 3</span>
+      </div>
+    </div>
   </div>
   <div class="c-card center-card" id="dc2" style="top:22vh; left:50%;">
     <div class="c-img" id="di2"></div>
+    <div class="c-foot">
+      <div class="c-desc">développement d'une vision systémique des enjeux urbains</div>
+      <div class="c-pills">
+        <span class="pill pill-b1">Bloc 1</span>
+        <span class="pill pill-b2">Bloc 2</span>
+        <span class="pill pill-b3">Bloc 3</span>
+      </div>
+    </div>
   </div>
   <div class="c-card" id="dc3" style="bottom:8vh; left:6vw;">
     <div class="c-img" id="di3"></div>
+    <div class="c-foot">
+      <div class="c-desc">travail de mémoire sur la durée</div>
+      <div class="c-pills">
+        <span class="pill pill-b1">Bloc 1</span>
+        <span class="pill pill-b3">Bloc 3</span>
+        <span class="pill pill-b4">Bloc 4</span>
+        <span class="pill pill-b5">Bloc 5</span>
+      </div>
+    </div>
   </div>
 
   <button class="layer-btn" id="diag-btn">
@@ -247,12 +330,33 @@
 
   <div class="c-card" id="rc1" style="top:8vh; right:4vw;">
     <div class="c-img" id="ri1"></div>
+    <div class="c-foot">
+      <div class="c-desc">Médiation et concertation publique auprès des citoyens</div>
+      <div class="c-pills">
+        <span class="pill pill-b1">Bloc 1</span>
+        <span class="pill pill-b2">Bloc 2</span>
+      </div>
+    </div>
   </div>
   <div class="c-card center-card" id="rc2" style="top:22vh; left:50%;">
     <div class="c-img" id="ri2"></div>
+    <div class="c-foot">
+      <div class="c-desc">Sondages d'opinion territoriale et ateliers collectifs</div>
+      <div class="c-pills">
+        <span class="pill pill-b1">Bloc 1</span>
+        <span class="pill pill-b3">Bloc 3</span>
+      </div>
+    </div>
   </div>
   <div class="c-card" id="rc3" style="bottom:8vh; left:6vw;">
     <div class="c-img" id="ri3"></div>
+    <div class="c-foot">
+      <div class="c-desc">Restitution finale synthétique aux acteurs publics du territoire</div>
+      <div class="c-pills">
+        <span class="pill pill-b1">Bloc 1</span>
+        <span class="pill pill-b5">Bloc 5</span>
+      </div>
+    </div>
   </div>
 
   <button class="layer-btn" id="restit-btn">
@@ -269,12 +373,32 @@
 
   <div class="c-card" id="pc1" style="top:8vh; right:4vw;">
     <div class="c-img" id="pi1"></div>
+    <div class="c-foot">
+      <div class="c-desc">Initialisation et cadrage stratégique multi-acteurs</div>
+      <div class="c-pills">
+        <span class="pill pill-b4">Bloc 4</span>
+      </div>
+    </div>
   </div>
   <div class="c-card center-card" id="pc2" style="top:22vh; left:50%;">
     <div class="c-img" id="pi2"></div>
+    <div class="c-foot">
+      <div class="c-desc">Pilotage budgétaire et planification des phases opérationnelles</div>
+      <div class="c-pills">
+        <span class="pill pill-b4">Bloc 4</span>
+        <span class="pill pill-b5">Bloc 5</span>
+      </div>
+    </div>
   </div>
   <div class="c-card" id="pc3" style="bottom:8vh; left:6vw;">
     <div class="c-img" id="pi3"></div>
+    <div class="c-foot">
+      <div class="c-desc">Évaluation intermédiaire des impacts socio-environnementaux</div>
+      <div class="c-pills">
+        <span class="pill pill-b1">Bloc 1</span>
+        <span class="pill pill-b4">Bloc 4</span>
+      </div>
+    </div>
   </div>
 
   <button class="layer-btn" id="project-btn">
@@ -291,12 +415,32 @@
 
   <div class="c-card" id="dac1" style="top:8vh; right:4vw;">
     <div class="c-img" id="dai1"></div>
+    <div class="c-foot">
+      <div class="c-desc">Nettoyage, structuration et agrégation SQL de bases de données</div>
+      <div class="c-pills">
+        <span class="pill pill-b3">Bloc 3</span>
+      </div>
+    </div>
   </div>
   <div class="c-card center-card" id="dac2" style="top:22vh; left:50%;">
     <div class="c-img" id="dai2"></div>
+    <div class="c-foot">
+      <div class="c-desc">Modélisation prédictive des flux urbains sous environnement QGIS/Python</div>
+      <div class="c-pills">
+        <span class="pill pill-b3">Bloc 3</span>
+        <span class="pill pill-b4">Bloc 4</span>
+      </div>
+    </div>
   </div>
   <div class="c-card" id="dac3" style="bottom:8vh; left:6vw;">
     <div class="c-img" id="dai3"></div>
+    <div class="c-foot">
+      <div class="c-desc">Datavisualisation interactive de l'évolution territoriale</div>
+      <div class="c-pills">
+        <span class="pill pill-b3">Bloc 3</span>
+        <span class="pill pill-b5">Bloc 5</span>
+      </div>
+    </div>
   </div>
 
   <button class="layer-btn" id="data-btn">
